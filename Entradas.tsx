@@ -16,7 +16,6 @@ export default function App() {
   const [formularioPrincipal, setFormularioPrincipal] = useState({ rut: '', email: '', telefono: '' });
   const [formulariosIndividuales, setFormulariosIndividuales] = useState<{ nombre: string; apellido: string; genero: string }[]>([]);
   const [pagoRealizado, setPagoRealizado] = useState(false);
-  const totalEntradas = cantidades.reduce((a, b) => a + b, 0);
   const totalPrecio = cantidades.reduce((total, cant, i) => total + cant * ENTRADAS[i].precio, 0);
 
   const handleCantidadChange = (index, value) => {
