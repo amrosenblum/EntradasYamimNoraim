@@ -16,9 +16,10 @@ export default function App() {
   const [formularioPrincipal, setFormularioPrincipal] = useState({ rut: '', email: '', telefono: '' });
   const [formulariosIndividuales, setFormulariosIndividuales] = useState<{ nombre: string; apellido: string; genero: string }[]>([]);
   const [pagoRealizado, setPagoRealizado] = useState(false);
+  const totalEntradas = cantidades.reduce((a, b) => a + b, 0);
   const totalPrecio = cantidades.reduce((total, cant, i) => total + cant * ENTRADAS[i].precio, 0);
 
-  const handleCantidadChange = (index, value) => {
+  const handleCantidadChange = (index: number, value: string | number) => {
     const nuevasCantidades = [...cantidades];
     nuevasCantidades[index] = Number(value);
     setCantidades(nuevasCantidades);
@@ -47,6 +48,7 @@ export default function App() {
       ...formularioPrincipal,
       entradas: entradasCompradas,
       total: totalPrecio,
+      totalEntradas,
     };
 
     await fetch('https://tu-webhook-de-google-apps-script.com', {
@@ -101,6 +103,9 @@ export default function App() {
         </div>
       ))}
 
+      <div className="text-right font-bold text-lg mb-2">
+        Total de entradas: {totalEntradas}
+      </div>
       <div className="text-right font-bold text-xl mb-4">
         Total: ${totalPrecio.toLocaleString('es-CL')}
       </div>
