@@ -63,7 +63,7 @@ export default function App() {
   return (
     <div>
       {/* Banner superior */}
-      <img src="/Banner.jpg" alt="Banner Aish" className="w-full max-h-96 object-cover" />
+      <img src="/banner.jpg" alt="Banner Aish" className="w-full max-h-64 object-cover" />
 
       {/* Contenedor principal con marco blanco */}
       <div className="max-w-3xl mx-auto bg-white bg-opacity-95 p-8 my-10 rounded-xl shadow-2xl backdrop-blur-md">
@@ -104,7 +104,6 @@ export default function App() {
               <option value="">Selecciona género</option>
               <option value="Masculino">Masculino</option>
               <option value="Femenino">Femenino</option>
-              <option value="Otro">Otro</option>
             </select>
           </div>
         ))}
@@ -118,6 +117,18 @@ export default function App() {
             Simular Pago y Confirmar Compra
           </button>
         )}
+
+        <p className="mt-4 text-sm text-center text-gray-700">
+          Si no puedes pagar ahora, contáctanos por WhatsApp al{" "}
+          <a
+            href="https://wa.me/56953622039"
+            className="text-green-700 underline font-semibold"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            +56 9 5362 2039
+          </a>
+        </p>
 
         {pagoRealizado && <div className="text-green-600 font-bold mt-4 text-center">¡Pago realizado y entradas registradas!</div>}
       </div>
