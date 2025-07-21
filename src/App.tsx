@@ -63,7 +63,13 @@ export default function App() {
   return (
     <div>
       {/* Banner superior */}
-      <img src="/Banner.jpg" alt="Banner Aish" className="w-full max-h-64 object-cover" />
+      <div className="w-full h-40 bg-white flex justify-center items-center overflow-hidden">
+        <img
+          src="/Banner.jpg"
+          alt="Banner Aish"
+          className="h-full object-contain"
+        />
+      </div>
 
       {/* Contenedor principal con marco blanco */}
       <div className="max-w-3xl mx-auto bg-white bg-opacity-95 p-8 my-10 rounded-xl shadow-2xl backdrop-blur-md">
