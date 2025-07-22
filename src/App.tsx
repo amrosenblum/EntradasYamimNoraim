@@ -16,6 +16,7 @@ export default function App() {
   const [formularioPrincipal, setFormularioPrincipal] = useState({ rut: '', email: '', telefono: '' });
   const [formulariosIndividuales, setFormulariosIndividuales] = useState<{ nombre: string; apellido: string; genero: string }[]>([]);
   const [pagoRealizado, setPagoRealizado] = useState(false);
+  const [loading, setLoading] = useState(false)
   const totalEntradas = cantidades.reduce((a, b) => a + b, 0);
   const totalPrecio = cantidades.reduce((total, cant, i) => total + cant * ENTRADAS[i].precio, 0);
 
@@ -28,36 +29,58 @@ export default function App() {
   };
 
   const handlePago = async () => {
-    // Simulación de pago exitoso
-    alert('Pago realizado con éxito. Enviando datos a Google Sheets...');
-    setPagoRealizado(true);
+    try {
+      setLoading(true);
 
-    const entradasCompradas: { tipo: string; nombre: string; apellido: string; genero: string }[] = [];
-    let index = 0;
-    cantidades.forEach((cantidad, i) => {
-      for (let j = 0; j < cantidad; j++) {
-        entradasCompradas.push({
-          tipo: ENTRADAS[i].tipo,
-          ...formulariosIndividuales[index],
-        });
-        index++;
+      const entradasCompradas: { tipo: string; nombre: string; apellido: string; genero: string }[] = [];
+      let index = 0;
+      cantidades.forEach((cantidad, i) => {
+        for (let j = 0; j < cantidad; j++) {
+          entradasCompradas.push({
+            tipo: ENTRADAS[i].tipo,
+            ...formulariosIndividuales[index],
+          });
+          index++;
+        }
+      });
+
+      const data = {
+        ...formularioPrincipal,
+        entradas: entradasCompradas,
+        total: totalPrecio,
+        totalEntradas,
+      };
+
+      // ENVÍO A GOOGLE SHEETS OPCIONAL (puedes dejarlo en success también)
+      await fetch('https://tu-webhook-de-google-apps-script.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      // Crear preferencia de pago en tu backend (usando el API Route /api/create-preferences)
+      const res = await fetch('/api/create-preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: `Compra de ${totalEntradas} entrada(s) - Evento Yamim Noraim`,
+          quantity: 1,
+          unit_price: totalPrecio,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.init_point) {
+        window.location.href = json.init_point; // redirige al pago
+      } else {
+        alert('Error al iniciar el pago.');
       }
-    });
-
-    const data = {
-      ...formularioPrincipal,
-      entradas: entradasCompradas,
-      total: totalPrecio,
-      totalEntradas,
-    };
-
-    await fetch('https://tu-webhook-de-google-apps-script.com', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    alert('Reserva registrada correctamente. ¡Gracias por tu compra!');
+    } catch (error) {
+      console.error('Error al pagar:', error);
+      alert('Hubo un error al procesar el pago.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -119,8 +142,12 @@ export default function App() {
         </div>
 
         {!pagoRealizado && (
-          <button onClick={handlePago} className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded w-full">
-            Simular Pago y Confirmar Compra
+          <button
+            onClick={handlePago}
+            disabled={loading}
+            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded w-full"
+          >
+            {loading ? 'Redirigiendo a pago...' : 'Pagar con Mercado Pago'}
           </button>
         )}
 

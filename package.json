@@ -8,8 +8,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "mercadopago": "^2.8.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "vercel": "^44.5.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.6",
