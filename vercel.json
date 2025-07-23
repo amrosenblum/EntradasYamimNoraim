@@ -4,7 +4,7 @@
   "framework": "vite",
   "functions": {
     "api/*.ts": {
-      "runtime": "vercel-node@canary"
+      "runtime": "nodejs18.x"
     }
   },
   "rewrites": [
