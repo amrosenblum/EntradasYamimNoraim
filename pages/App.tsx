@@ -5,6 +5,7 @@ const ENTRADAS = [
   { tipo: 'Entrada general (Socio)', precio: 65000 },
   { tipo: 'Entrada estudiante', precio: 50000 },
   { tipo: 'Entrada estudiante (Socio/Olami)', precio: 25000 },
+  { tipo: 'Pagaré después', precio: 0 },
 ];
 
 export default function App() {
@@ -15,6 +16,10 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const totalEntradas = cantidades.reduce((a, b) => a + b, 0);
   const totalPrecio = cantidades.reduce((total, cant, i) => total + cant * ENTRADAS[i].precio, 0);
+  const formularioCompleto = formularioPrincipal.rut && formularioPrincipal.email && formularioPrincipal.telefono;
+  const formulariosIndividualesCompletos = formulariosIndividuales.every(f => f.nombre && f.apellido && f.genero);
+  const hayEntradasPagadas = cantidades.some((c, i) => ENTRADAS[i].precio > 0 && c > 0);
+  const hayEntradas = totalEntradas > 0;
 
   const handleCantidadChange = (index: number, value: string | number) => {
     const nuevasCantidades = [...cantidades];
@@ -24,7 +29,7 @@ export default function App() {
     setFormulariosIndividuales(Array(total).fill({ nombre: '', apellido: '', genero: '' }));
   };
 
-  const handlePago = async () => {
+  const handlePagoMercadoPago = async () => {
     try {
       setLoading(true);
 
@@ -46,6 +51,19 @@ export default function App() {
         total: totalPrecio,
         totalEntradas,
       };
+
+      if (totalPrecio === 0) {
+        // Registro sin pago
+        await fetch('https://tu-webhook-de-google-apps-script.com', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+      
+        alert('Gracias! Ya te registramos!');
+        window.location.href = '/gracias'; // Puedes crear una ruta en tu frontend
+        return;
+      }
 
       // ENVÍO A GOOGLE SHEETS OPCIONAL (puedes dejarlo en success también)
       await fetch('https://tu-webhook-de-google-apps-script.com', {
@@ -74,6 +92,82 @@ export default function App() {
     } catch (error) {
       console.error('Error al pagar:', error);
       alert('Hubo un error al procesar el pago.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePagoWebpay = async () => {
+    try {
+      setLoading(true);
+
+      const entradasCompradas: { tipo: string; nombre: string; apellido: string; genero: string }[] = [];
+      let index = 0;
+      cantidades.forEach((cantidad, i) => {
+        for (let j = 0; j < cantidad; j++) {
+          entradasCompradas.push({
+            tipo: ENTRADAS[i].tipo,
+            ...formulariosIndividuales[index],
+          });
+          index++;
+        }
+      });
+
+      const data = {
+        ...formularioPrincipal,
+        entradas: entradasCompradas,
+        total: totalPrecio,
+        totalEntradas,
+      };
+
+      if (totalPrecio === 0) {
+        await fetch('https://tu-webhook-de-google-apps-script.com', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        alert('Gracias! Ya te registramos!');
+        window.location.href = '/gracias';
+        return;
+      }
+
+      await fetch('https://tu-webhook-de-google-apps-script.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const res = await fetch('/api/create-webpay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          buy_order: `orden_${Date.now()}`,
+          session_id: `${formularioPrincipal.email}_${Date.now()}`,
+          amount: totalPrecio,
+          return_url: `${window.location.origin}/gracias`,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.url && json.token) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = json.url;
+
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = 'token_ws';
+        tokenInput.value = json.token;
+
+        form.appendChild(tokenInput);
+        document.body.appendChild(form);
+        form.submit();
+      } else {
+        alert('Error al iniciar el pago con Webpay.');
+      }
+    } catch (error) {
+      console.error('Error al pagar con Webpay:', error);
+      alert('Hubo un error al procesar el pago con Webpay.');
     } finally {
       setLoading(false);
     }
@@ -139,11 +233,29 @@ export default function App() {
 
         {!pagoRealizado && (
           <button
-            onClick={handlePago}
-            disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded w-full"
+            onClick={handlePagoMercadoPago}
+            disabled={loading || !hayEntradas || !formularioCompleto || !formulariosIndividualesCompletos}
+            className={`py-2 px-4 rounded w-full text-white ${
+              loading || !hayEntradas || !formularioCompleto || !formulariosIndividualesCompletos
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
             {loading ? 'Redirigiendo a pago...' : 'Pagar con Mercado Pago'}
+          </button>
+        )}
+
+        {!pagoRealizado && (
+          <button
+            onClick={handlePagoWebpay}
+            disabled={loading || !hayEntradas || !formularioCompleto || !formulariosIndividualesCompletos}
+            className={`py-2 px-4 rounded w-full text-white mt-2 ${
+              loading || !hayEntradas || !formularioCompleto || !formulariosIndividualesCompletos
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-red-600 hover:bg-red-700'
+            }`}
+          >
+            {loading ? 'Redirigiendo a pago...' : 'Pagar con Webpay'}
           </button>
         )}
 
