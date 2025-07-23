@@ -1,4 +1,3 @@
-// pages/gracias.tsx
 export default function Gracias() {
   return (
     <div className="max-w-2xl mx-auto text-center mt-20 p-8 bg-white rounded shadow">
