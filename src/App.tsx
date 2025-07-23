@@ -1,7 +1,3 @@
-// Proyecto React con TailwindCSS
-// Estructura principal del flujo de compra con simulación de pago
-// En producción, los botones "Pagar" deben ser reemplazados por la integración real con MercadoPago/Webpay
-
 import { useState } from 'react';
 
 const ENTRADAS = [
