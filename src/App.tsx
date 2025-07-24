@@ -29,51 +29,62 @@ export default function App() {
     setFormulariosIndividuales(Array(total).fill({ nombre: '', apellido: '', genero: '', nusaj: '' }));
   };
 
-const handlePagoMercadoPago = async () => {
-  try {
-    setLoading(true);
-
-    const entradasCompradas: { tipo: string; nombre: string; apellido: string; genero: string; nusaj: string }[] = [];
-    let index = 0;
-    // 1) build the list of “entradas” objects
-    cantidades.forEach((cantidad, i) => {
-      for (let j = 0; j < cantidad; j++) {
-        entradasCompradas.push({
-          tipo: ENTRADAS[i].tipo,
-          nombre: formulariosIndividuales[index].nombre,
-          apellido: formulariosIndividuales[index].apellido,
-          genero: formulariosIndividuales[index].genero,
-          nusaj: formulariosIndividuales[index].nusaj,
-        });
-        index++;
-      }
-    });
-
-    // 2) call your backend to create the MercadoPago preference
-    const resp = await fetch('/api/create-preferences', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: 'Entradas Yamim Noraim',
-        quantity: 1,               // we’ll use a single line item
-        unit_price: totalPrecio,   // total CLP amount
-        metadata: {
-          formularioPrincipal,
-          entradas: entradasCompradas
+  const handlePagoMercadoPago = async () => {
+    try {
+      setLoading(true);
+    
+      // 1) Build the list of purchased entries
+      const entradasCompradas: {
+        tipo: string
+        nombre: string
+        apellido: string
+        genero: string
+        nusaj: string
+      }[] = [];
+      let index = 0;
+      cantidades.forEach((cantidad, i) => {
+        for (let j = 0; j < cantidad; j++) {
+          entradasCompradas.push({
+            tipo: ENTRADAS[i].tipo,
+            nombre: formulariosIndividuales[index].nombre,
+            apellido: formulariosIndividuales[index].apellido,
+            genero: formulariosIndividuales[index].genero,
+            nusaj: formulariosIndividuales[index].nusaj,
+          });
+          index++;
         }
-      })
-    });
-    const { init_point } = await resp.json();
-
-    // 3) redirect the browser to MercadoPago
-    window.location.href = init_point;
-
-  } catch (err) {
-    console.error('Error al pagar:', err);
-    setLoading(false);
-  }
-};
-
+      });
+    
+      // 2) Call your own backend
+      const resp = await fetch('/api/create-preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Entradas Yamim Noraim',
+          quantity: 1,               // single line item
+          unit_price: totalPrecio,   // total CLP amount
+          metadata: {
+            formularioPrincipal,
+            entradas: entradasCompradas,
+          },
+        }),
+      });
+    
+      const { init_point, redirectTo } = await resp.json();
+    
+      // 3a) If backend told us to skip MP (zero‐price), go straight to gracias
+      if (redirectTo) {
+        window.location.href = redirectTo;
+        return;
+      }
+    
+      // 3b) Otherwise redirect to MercadoPago
+      window.location.href = init_point;
+    } catch (err) {
+      console.error('Error al pagar:', err);
+      setLoading(false);
+    }
+  };
 
   const handlePagoWebpay = async () => {
     try {
