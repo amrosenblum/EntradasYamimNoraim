@@ -9,24 +9,31 @@ mercadopago.configure({
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST')
-    return res.status(405).end('Method Not Allowed')
+    res.setHeader('Allow', 'POST');
+    return res.status(405).end('Method Not Allowed');
   }
 
-  const { title, quantity, unit_price, metadata } = req.body
+  const { title, quantity, unit_price, metadata } = req.body;
+  // metadata = { formularioPrincipal: { rut, email, telefono }, entradas: [...] }
 
-  // 1) If total price is zero, bypass MercadoPago entirely:
+  // **Flatten for cero‐pesos (“pagaré después”)**
   if (unit_price <= 0) {
-    // send data straight to your Apps Script
+    const { formularioPrincipal, entradas } = metadata;
+    // build the exact shape your Apps Script expects:
+    const payload = {
+      ...formularioPrincipal,   // brings rut, email, telefono up one level
+      entradas                  // array of persona objects
+    };
+
     await fetch(process.env.GAS_URL!, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(metadata)
-    })
-    // tell the client to go to "gracias"
-    return res.status(200).json({ redirectTo: '/gracias' })
-  }
+      body: JSON.stringify(payload),
+    });
 
+    return res.status(200).json({ redirectTo: '/gracias' });
+  }
+  
   // 2) Otherwise, do the normal MercadoPago flow
   try {
     const preference = {
