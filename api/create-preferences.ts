@@ -1,6 +1,7 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 const mercadopago = require('mercadopago');
 
-module.exports = async function (req, res) {
+module.exports = async function (req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Only POST requests allowed' });
   }
@@ -32,8 +33,12 @@ module.exports = async function (req, res) {
 
     const response = await mercadopago.preferences.create(preference);
     return res.status(200).json({ init_point: response.body.init_point });
-  } catch (error) {
-    console.error('MercadoPago Error:', error);
-    return res.status(500).json({ error: error.message || 'Failed to create preference' });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('MercadoPago Error:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+    console.error('Unknown error:', error);
+    return res.status(500).json({ error: 'Unknown error' });
   }
 };
