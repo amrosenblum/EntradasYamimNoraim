@@ -231,8 +231,8 @@ export default function App() {
               setFormulariosIndividuales(nuevos);
             }}>
               <option value="">Selecciona Nusaj</option>
-              <option value="Ashkenazí">Ashkenazi</option>
-              <option value="Sefaradí">Sefaradi</option>
+              <option value="Ashkenazi">Ashkenazí</option>
+              <option value="Sefaradi">Sefaradí</option>
             </select>
           </div>
         ))}
