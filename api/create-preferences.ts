@@ -2,9 +2,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import mercadopago from 'mercadopago'
 
-const mp = mercadopago as any
-
-mp.configure({
+mercadopago.configure({
   access_token: process.env.MERCADOPAGO_ACCESS_TOKEN!
 })
 
@@ -27,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       metadata
     }
 
-    const { body } = await mp.preferences.create(preference)
+    const { body } = await mercadopago.preferences.create(preference)
     return res.status(200).json({ init_point: body.init_point })
 
   } catch (err: any) {
