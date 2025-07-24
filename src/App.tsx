@@ -11,13 +11,13 @@ const ENTRADAS = [
 export default function App() {
   const [cantidades, setCantidades] = useState(ENTRADAS.map(() => 0));
   const [formularioPrincipal, setFormularioPrincipal] = useState({ rut: '', email: '', telefono: '' });
-  const [formulariosIndividuales, setFormulariosIndividuales] = useState<{ nombre: string; apellido: string; genero: string }[]>([]);
+  const [formulariosIndividuales, setFormulariosIndividuales] = useState<{ nombre: string; apellido: string; genero: string; nusaj: string }[]>([]);
   const [pagoRealizado, setPagoRealizado] = useState(false);
   const [loading, setLoading] = useState(false)
   const totalEntradas = cantidades.reduce((a, b) => a + b, 0);
   const totalPrecio = cantidades.reduce((total, cant, i) => total + cant * ENTRADAS[i].precio, 0);
   const formularioCompleto = formularioPrincipal.rut && formularioPrincipal.email && formularioPrincipal.telefono;
-  const formulariosIndividualesCompletos = formulariosIndividuales.every(f => f.nombre && f.apellido && f.genero);
+  const formulariosIndividualesCompletos = formulariosIndividuales.every(f => f.nombre && f.apellido && f.genero && f.nusaj);
   const hayEntradasPagadas = cantidades.some((c, i) => ENTRADAS[i].precio > 0 && c > 0);
   const hayEntradas = totalEntradas > 0;
 
@@ -26,14 +26,14 @@ export default function App() {
     nuevasCantidades[index] = Number(value);
     setCantidades(nuevasCantidades);
     const total = nuevasCantidades.reduce((a, b) => a + b, 0);
-    setFormulariosIndividuales(Array(total).fill({ nombre: '', apellido: '', genero: '' }));
+    setFormulariosIndividuales(Array(total).fill({ nombre: '', apellido: '', genero: '', nusaj: '' }));
   };
 
   const handlePagoMercadoPago = async () => {
     try {
       setLoading(true);
 
-      const entradasCompradas: { tipo: string; nombre: string; apellido: string; genero: string }[] = [];
+      const entradasCompradas: { tipo: string; nombre: string; apellido: string; genero: string; nusaj: string }[] = [];
       let index = 0;
       cantidades.forEach((cantidad, i) => {
         for (let j = 0; j < cantidad; j++) {
@@ -101,7 +101,7 @@ export default function App() {
     try {
       setLoading(true);
 
-      const entradasCompradas: { tipo: string; nombre: string; apellido: string; genero: string }[] = [];
+      const entradasCompradas: { tipo: string; nombre: string; apellido: string; genero: string; nusaj: string }[] = [];
       let index = 0;
       cantidades.forEach((cantidad, i) => {
         for (let j = 0; j < cantidad; j++) {
@@ -223,6 +223,15 @@ export default function App() {
               <option value="">Selecciona género</option>
               <option value="Masculino">Masculino</option>
               <option value="Femenino">Femenino</option>
+            </select>
+            <select className="border p-2 w-full" onChange={(e) => {
+              const nuevos = [...formulariosIndividuales];
+              nuevos[i] = { ...nuevos[i], nusaj: e.target.value };
+              setFormulariosIndividuales(nuevos);
+            }}>
+              <option value="">Selecciona Nusaj</option>
+              <option value="Masculino">Ashkenazí</option>
+              <option value="Femenino">Sefaradí</option>
             </select>
           </div>
         ))}
