@@ -12,7 +12,7 @@ module.exports = async function (req: VercelRequest, res: VercelResponse) {
 
     mercadopago.configure({ access_token: accessToken });
 
-    const { title, quantity, unit_price } = req.body;
+const { title, quantity, unit_price, metadata } = req.body;
 
     const preference = {
       items: [
@@ -23,10 +23,12 @@ module.exports = async function (req: VercelRequest, res: VercelResponse) {
           unit_price,
         },
       ],
-      back_urls: {
-        success: 'https://entradas-yamim-noraim.vercel.app/gracias',
-      },
+       back_urls: {
+         success: `${process.env.SITE_URL}/api/mp-success`,
+         failure: `${process.env.SITE_URL}/error`
+       },
       auto_return: 'approved',
+      metadata,
     };
 
     const response = await mercadopago.preferences.create(preference);

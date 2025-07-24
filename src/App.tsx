@@ -29,73 +29,51 @@ export default function App() {
     setFormulariosIndividuales(Array(total).fill({ nombre: '', apellido: '', genero: '', nusaj: '' }));
   };
 
-  const handlePagoMercadoPago = async () => {
-    try {
-      setLoading(true);
+const handlePagoMercadoPago = async () => {
+  try {
+    setLoading(true);
 
-      const entradasCompradas: { tipo: string; nombre: string; apellido: string; genero: string; nusaj: string }[] = [];
-      let index = 0;
-      cantidades.forEach((cantidad, i) => {
-        for (let j = 0; j < cantidad; j++) {
-          entradasCompradas.push({
-            tipo: ENTRADAS[i].tipo,
-            ...formulariosIndividuales[index],
-          });
-          index++;
-        }
-      });
-
-      const data = {
-        ...formularioPrincipal,
-        entradas: entradasCompradas,
-        total: totalPrecio,
-        totalEntradas,
-      };
-
-      if (totalPrecio === 0) {
-        // Registro sin pago
-        await fetch('https://script.google.com/macros/s/AKfycbzqI8g-78rBOIA2iB9ZdZ2Kk6aFD4IHqJBs1fcCNcyY9vXK1OZYEvegItE6jKxgCMhi/exec', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
+    const entradasCompradas: { tipo: string; nombre: string; apellido: string; genero: string; nusaj: string }[] = [];
+    let index = 0;
+    // 1) build the list of “entradas” objects
+    cantidades.forEach((cantidad, i) => {
+      for (let j = 0; j < cantidad; j++) {
+        entradasCompradas.push({
+          tipo: ENTRADAS[i].tipo,
+          nombre: formulariosIndividuales[index].nombre,
+          apellido: formulariosIndividuales[index].apellido,
+          genero: formulariosIndividuales[index].genero,
+          nusaj: formulariosIndividuales[index].nusaj,
         });
-      
-        alert('Gracias! Ya te registramos!');
-        window.location.href = '/gracias'; // Puedes crear una ruta en tu frontend
-        return;
+        index++;
       }
+    });
 
-      // ENVÍO A GOOGLE SHEETS OPCIONAL (puedes dejarlo en success también)
-      await fetch('https://script.google.com/macros/s/AKfycbzqI8g-78rBOIA2iB9ZdZ2Kk6aFD4IHqJBs1fcCNcyY9vXK1OZYEvegItE6jKxgCMhi/exec', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+    // 2) call your backend to create the MercadoPago preference
+    const resp = await fetch('/api/create-preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: 'Entradas Yamim Noraim',
+        quantity: 1,               // we’ll use a single line item
+        unit_price: totalPrecio,   // total CLP amount
+        metadata: {
+          formularioPrincipal,
+          entradas: entradasCompradas
+        }
+      })
+    });
+    const { init_point } = await resp.json();
 
-      // Crear preferencia de pago en tu backend (usando el API Route /api/create-preferences)
-      const res = await fetch('/api/create-preferences', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: `Compra de ${totalEntradas} entrada(s) - Evento Yamim Noraim`,
-          quantity: 1,
-          unit_price: totalPrecio,
-        }),
-      });
+    // 3) redirect the browser to MercadoPago
+    window.location.href = init_point;
 
-      const json = await res.json();
-      if (json.init_point) {
-        window.location.href = json.init_point; // redirige al pago
-      } else {
-        alert('Error al iniciar el pago.');
-      }
-    } catch (error) {
-      console.error('Error al pagar:', error);
-      alert('Hubo un error al procesar el pago.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (err) {
+    console.error('Error al pagar:', err);
+    setLoading(false);
+  }
+};
+
 
   const handlePagoWebpay = async () => {
     try {
