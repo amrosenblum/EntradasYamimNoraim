@@ -1,44 +1,37 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-const mercadopago = require('mercadopago');
+// api/create-preferences.ts
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import mercadopago from 'mercadopago'
 
-module.exports = async function (req: VercelRequest, res: VercelResponse) {
+const mp = mercadopago as any
+
+mp.configure({
+  access_token: process.env.MERCADOPAGO_ACCESS_TOKEN!
+})
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Only POST requests allowed' });
+    res.setHeader('Allow', 'POST')
+    return res.status(405).end('Method Not Allowed')
   }
+
+  const { title, quantity, unit_price, metadata } = req.body
 
   try {
-    const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
-    if (!accessToken) throw new Error('MERCADOPAGO_ACCESS_TOKEN not defined');
-
-    mercadopago.configure({ access_token: accessToken });
-
-const { title, quantity, unit_price, metadata } = req.body;
-
     const preference = {
-      items: [
-        {
-          title,
-          quantity,
-          currency_id: 'CLP',
-          unit_price,
-        },
-      ],
-       back_urls: {
-         success: `${process.env.SITE_URL}/api/mp-success`,
-         failure: `${process.env.SITE_URL}/error`
-       },
+      items: [{ title, quantity, currency_id: 'CLP', unit_price }],
+      back_urls: {
+        success: `${process.env.SITE_URL}/api/mp-success`,
+        failure: `${process.env.SITE_URL}/error`
+      },
       auto_return: 'approved',
-      metadata,
-    };
-
-    const response = await mercadopago.preferences.create(preference);
-    return res.status(200).json({ init_point: response.body.init_point });
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error('MercadoPago Error:', error.message);
-      return res.status(500).json({ error: error.message });
+      metadata
     }
-    console.error('Unknown error:', error);
-    return res.status(500).json({ error: 'Unknown error' });
+
+    const { body } = await mp.preferences.create(preference)
+    return res.status(200).json({ init_point: body.init_point })
+
+  } catch (err: any) {
+    console.error('MP Error', err)
+    return res.status(500).json({ error: err.message })
   }
-};
+}
