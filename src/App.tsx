@@ -54,7 +54,7 @@ export default function App() {
 
       if (totalPrecio === 0) {
         // Registro sin pago
-        await fetch('https://tu-webhook-de-google-apps-script.com', {
+        await fetch('https://script.google.com/a/macros/aish.cl/s/AKfycbyc3TCnZYUCSpNMfFQsGuYd_Jf1Ua3rUWSsyCtgiFo834MEqWTBvNnU9Rb0Eq5RoOwgVg/exec', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
@@ -66,7 +66,7 @@ export default function App() {
       }
 
       // ENVÍO A GOOGLE SHEETS OPCIONAL (puedes dejarlo en success también)
-      await fetch('https://tu-webhook-de-google-apps-script.com', {
+      await fetch('https://script.google.com/a/macros/aish.cl/s/AKfycbyc3TCnZYUCSpNMfFQsGuYd_Jf1Ua3rUWSsyCtgiFo834MEqWTBvNnU9Rb0Eq5RoOwgVg/exec', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -121,7 +121,7 @@ export default function App() {
       };
 
       if (totalPrecio === 0) {
-        await fetch('https://tu-webhook-de-google-apps-script.com', {
+        await fetch('https://script.google.com/a/macros/aish.cl/s/AKfycbyc3TCnZYUCSpNMfFQsGuYd_Jf1Ua3rUWSsyCtgiFo834MEqWTBvNnU9Rb0Eq5RoOwgVg/exec', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
@@ -131,7 +131,7 @@ export default function App() {
         return;
       }
 
-      await fetch('https://tu-webhook-de-google-apps-script.com', {
+      await fetch('https://script.google.com/a/macros/aish.cl/s/AKfycbyc3TCnZYUCSpNMfFQsGuYd_Jf1Ua3rUWSsyCtgiFo834MEqWTBvNnU9Rb0Eq5RoOwgVg/exec', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

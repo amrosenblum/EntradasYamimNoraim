@@ -24,9 +24,7 @@ module.exports = async function (req: VercelRequest, res: VercelResponse) {
         },
       ],
       back_urls: {
-        success: 'https://tusitio.com/success',
-        failure: 'https://tusitio.com/failure',
-        pending: 'https://tusitio.com/pending',
+        success: 'https://entradas-yamim-noraim.vercel.app/gracias',
       },
       auto_return: 'approved',
     };
