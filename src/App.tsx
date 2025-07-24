@@ -215,7 +215,7 @@ export default function App() {
               nuevos[i] = { ...nuevos[i], apellido: e.target.value };
               setFormulariosIndividuales(nuevos);
             }} />
-            <select className="border p-2 w-full" onChange={(e) => {
+            <select className="border p-2 w-full mb-2" onChange={(e) => {
               const nuevos = [...formulariosIndividuales];
               nuevos[i] = { ...nuevos[i], genero: e.target.value };
               setFormulariosIndividuales(nuevos);
@@ -224,14 +224,15 @@ export default function App() {
               <option value="Masculino">Masculino</option>
               <option value="Femenino">Femenino</option>
             </select>
-            <select className="border p-2 w-full" onChange={(e) => {
+
+            <select className="border p-2 w-full mb-2" onChange={(e) => {
               const nuevos = [...formulariosIndividuales];
               nuevos[i] = { ...nuevos[i], nusaj: e.target.value };
               setFormulariosIndividuales(nuevos);
             }}>
               <option value="">Selecciona Nusaj</option>
-              <option value="Masculino">Ashkenazí</option>
-              <option value="Femenino">Sefaradí</option>
+              <option value="Ashkenazí">Ashkenazi</option>
+              <option value="Sefaradí">Sefaradi</option>
             </select>
           </div>
         ))}
