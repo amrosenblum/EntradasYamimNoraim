@@ -19,6 +19,7 @@
   "include": [
     "src/**/*",
     "api/**/*",
-    "types/mercadopago.d.ts"
+    "types/mercadopago.d.ts",
+    "types/transbank-sdk.d.ts"
   ]
 }

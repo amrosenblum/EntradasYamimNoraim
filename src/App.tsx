@@ -32,7 +32,7 @@ export default function App() {
   const handlePagoMercadoPago = async () => {
     try {
       setLoading(true);
-    
+
       // 1) Build the list of purchased entries
       const entradasCompradas: {
         tipo: string
@@ -54,7 +54,7 @@ export default function App() {
           index++;
         }
       });
-    
+
       // 2) Call your own backend
       const resp = await fetch('/api/create-preferences', {
         method: 'POST',
@@ -69,15 +69,15 @@ export default function App() {
           },
         }),
       });
-    
+
       const { init_point, redirectTo } = await resp.json();
-    
+
       // 3a) If backend told us to skip MP (zero‐price), go straight to gracias
       if (redirectTo) {
         window.location.href = redirectTo;
         return;
       }
-    
+
       // 3b) Otherwise redirect to MercadoPago
       window.location.href = init_point;
     } catch (err) {
@@ -88,79 +88,53 @@ export default function App() {
 
   const handlePagoWebpay = async () => {
     try {
-      setLoading(true);
+      setLoading(true)
 
-      const entradasCompradas: { tipo: string; nombre: string; apellido: string; genero: string; nusaj: string }[] = [];
-      let index = 0;
+      // 1) Build your entradasCompradas & formularioPrincipal just like MP
+      const entradasCompradas = [] as any[]
+      let index = 0
       cantidades.forEach((cantidad, i) => {
         for (let j = 0; j < cantidad; j++) {
           entradasCompradas.push({
-            tipo: ENTRADAS[i].tipo,
-            ...formulariosIndividuales[index],
-          });
-          index++;
+            tipo:   ENTRADAS[i].tipo,
+            nombre: formulariosIndividuales[index].nombre,
+            apellido: formulariosIndividuales[index].apellido,
+            genero: formulariosIndividuales[index].genero,
+            nusaj:  formulariosIndividuales[index].nusaj
+          })
+          index++
         }
-      });
+      })
 
-      const data = {
-        ...formularioPrincipal,
-        entradas: entradasCompradas,
-        total: totalPrecio,
-        totalEntradas,
-      };
-
-      if (totalPrecio === 0) {
-        await fetch('https://script.google.com/macros/s/AKfycbzqI8g-78rBOIA2iB9ZdZ2Kk6aFD4IHqJBs1fcCNcyY9vXK1OZYEvegItE6jKxgCMhi/exec', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
-        alert('Gracias! Ya te registramos!');
-        window.location.href = '/gracias';
-        return;
-      }
-
-      await fetch('https://script.google.com/macros/s/AKfycbzqI8g-78rBOIA2iB9ZdZ2Kk6aFD4IHqJBs1fcCNcyY9vXK1OZYEvegItE6jKxgCMhi/exec', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const res = await fetch('/api/create-webpay', {
+      const resp = await fetch('/api/create-webpay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          buy_order: `orden_${Date.now()}`,
-          session_id: `${formularioPrincipal.email}_${Date.now()}`,
-          amount: totalPrecio,
-          return_url: `${window.location.origin}/gracias`,
-        }),
-      });
+          title:      'Entradas Yamim Noraim',
+          quantity:    1,
+          unit_price: totalPrecio,
+          metadata: {
+            formularioPrincipal,
+            entradas: entradasCompradas
+          }
+        })
+      })
+      const { url, token, redirectTo } = await resp.json()
 
-      const json = await res.json();
-      if (json.url && json.token) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = json.url;
-
-        const tokenInput = document.createElement('input');
-        tokenInput.type = 'hidden';
-        tokenInput.name = 'token_ws';
-        tokenInput.value = json.token;
-
-        form.appendChild(tokenInput);
-        document.body.appendChild(form);
-        form.submit();
-      } else {
-        alert('Error al iniciar el pago con Webpay.');
+      // 2) Zero‑price?
+      if (redirectTo) {
+        window.location.href = redirectTo
+        return
       }
-    } catch (error) {
-      console.error('Error al pagar con Webpay:', error);
-      alert('Hubo un error al procesar el pago con Webpay.');
-    } finally {
-      setLoading(false);
+
+      // 3) Otherwise start Webpay
+      // Transbank expects you to append the token to the URL:
+      window.location.href = `${url}?token_ws=${token}`
+    } catch (err) {
+      console.error('Webpay error:', err)
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div>
