@@ -4,7 +4,7 @@ import transbank from 'transbank-sdk'
 const { WebpayPlus } = transbank
 
 // Must use the same credentials as in create‑webpay.ts
-WebpayPlus.Transaction.buildForIntegration(
+const transaction = WebpayPlus.Transaction.buildForIntegration(
   process.env.TBK_COMMERCE_CODE!,
   process.env.TBK_API_KEY!
 )
@@ -19,7 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // 1️⃣ Confirm the transaction
-    const tx = await WebpayPlus.Transaction.getTransactionResult(token)
+    const tx = await transaction.commit(token)
 
     // 2️⃣ Build payload for your Apps Script
     const payload = {

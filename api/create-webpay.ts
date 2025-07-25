@@ -4,7 +4,7 @@ import transbank from 'transbank-sdk'
 const { WebpayPlus } = transbank
 
 // 1️⃣ Configure your Transbank credentials (integration or production)
-WebpayPlus.Transaction.buildForIntegration(
+const transaction = WebpayPlus.Transaction.buildForIntegration(
   process.env.TBK_COMMERCE_CODE!,
   process.env.TBK_API_KEY!
 )
@@ -39,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const buyOrder  = Date.now().toString()
     const sessionId = formularioPrincipal.rut || buyOrder
 
-    const { token, url } = await WebpayPlus.Transaction.initTransaction(
+    const { token, url } = await transaction.create(
       buyOrder,
       sessionId,
       unit_price,
