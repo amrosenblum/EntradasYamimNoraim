@@ -1,8 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { WebpayPlus, Options } from 'transbank-sdk'
 
-
-
 // 1️⃣ Instantiate a WebpayPlus client for integration (sandbox)
 const commerceCode = process.env.TBK_COMMERCE_CODE!
 const apiKey       = process.env.TBK_API_KEY!
