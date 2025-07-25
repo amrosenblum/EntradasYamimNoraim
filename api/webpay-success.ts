@@ -1,15 +1,11 @@
+// api/webpay-success.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import {
-  WebpayPlus,
-  Options
-} from 'transbank-sdk'
+import { WebpayPlus } from 'transbank-sdk'
 
-// 1️⃣ Instantiate a WebpayPlus client for integration (sandbox)
-const commerceCode = process.env.TBK_COMMERCE_CODE!
-const apiKey       = process.env.TBK_API_KEY!
-
-const webpayClient = new WebpayPlus.Transaction(
-  new Options(commerceCode, apiKey, 'INTEGRATION')
+// Re‑configure with the **same** credentials
+WebpayPlus.configureForIntegration(
+  process.env.TBK_COMMERCE_CODE!,
+  process.env.TBK_API_KEY!
 )
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -21,15 +17,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const token = String(req.query.token_ws || '')
 
   try {
-    const commitResult = await webpayClient.commit(token)  
-    const tx = commitResult
+    // 3️⃣ Confirm the transaction
+    const tx = await WebpayPlus.Transaction.getTransactionResult(token)
 
-    const entradas = JSON.parse(tx.buy_order || '[]')
+    // Build payload however your Apps Script expects it:
     const payload = {
-      ...tx.card_detail,
       amount: tx.amount,
       status: tx.status,
-      entradas
+      cardDetail: tx.card_detail,
+      entradas: JSON.parse(tx.buy_order || '[]')
     }
 
     await fetch(process.env.GAS_URL!, {
@@ -41,6 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('Webpay confirm error', err)
   }
 
+  // 4️⃣ Redirect user to your thanks page
   res.writeHead(302, { Location: '/gracias' })
   res.end()
 }

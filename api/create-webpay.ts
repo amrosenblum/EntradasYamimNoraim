@@ -1,12 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { WebpayPlus, Options } from 'transbank-sdk'
+import { WebpayPlus } from 'transbank-sdk'
 
-// 1️⃣ Instantiate a WebpayPlus client for integration (sandbox)
-const commerceCode = process.env.TBK_COMMERCE_CODE!
-const apiKey       = process.env.TBK_API_KEY!
-
-const webpayClient = new WebpayPlus.Transaction(
-  new Options(commerceCode, apiKey, 'INTEGRATION')
+// 1️⃣ configure your sandbox or prod credentials
+WebpayPlus.configureForIntegration(
+  process.env.TBK_COMMERCE_CODE!,
+  process.env.TBK_API_KEY!
 )
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -15,38 +13,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).end('Method Not Allowed')
   }
 
-  const { title, quantity, unit_price, metadata } = req.body
-  const { formularioPrincipal, entradas } = metadata
+  const { unit_price, metadata: { formularioPrincipal, entradas } } = req.body
 
-  // — Zero‑price shortcut (“pagaré después”) —
+  // Zero‑price shortcut (“pagaré después”)
   if (unit_price <= 0) {
-    const payload = { ...formularioPrincipal, entradas }
     await fetch(process.env.GAS_URL!, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ 
+        ...formularioPrincipal,
+        entradas 
+      })
     })
     return res.status(200).json({ redirectTo: '/gracias' })
   }
 
-  // — Normal Webpay Plus flow —
   try {
-    // 2️⃣ Create the transaction
+    // 2️⃣ Kick off Webpay Plus
     const buyOrder  = Date.now().toString()
     const sessionId = formularioPrincipal.rut || buyOrder
 
-    const response = await webpayClient.create(
+    const { url, token } = await WebpayPlus.Transaction.initTransaction(
       buyOrder,
       sessionId,
       unit_price,
-      `${process.env.SITE_URL}/api/webpay-success` // success
+      `${process.env.SITE_URL}/api/webpay-success`, // returnUrl (user comes back here)
+      `${process.env.SITE_URL}/api/webpay-success`  // finalUrl (in case of server-to-server callback)
     )
 
-    // 3️⃣ Send the URL & token back to the client
-    return res.status(200).json({
-      url:   response.url,
-      token: response.token
-    })
+    return res.status(200).json({ url, token })
+
   } catch (err: any) {
     console.error('Webpay init error', err)
     return res.status(500).json({ error: err.message })
