@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Info, Plus, Minus } from 'lucide-react'
+
 
 const ENTRADAS = [
   {
@@ -200,23 +202,46 @@ return (
         {/* 1–3) Entradas list with tooltip & side-by-side input */}
         {ENTRADAS.map((e, i) => (
           <div key={i} className="mb-4 flex items-center justify-between">
-            <div className="flex items-center space-x-1">
-              <span className="font-normal">{e.tipo} (${e.precio.toLocaleString('es-CL')})</span>
-              <span
-                className="text-gray-500 cursor-help"
-                title={e.info}
-                style={{ fontSize: '0.9rem' }}
-              >
-                ℹ️
+            {/* label + info icon */}
+            <div className="flex items-center space-x-2">
+              <span className="font-normal">
+                {e.tipo} (${e.precio.toLocaleString('es-CL')})
               </span>
+              <div
+                className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-400"
+                title={e.info}
+              >
+                <Info size={12} className="text-white" />
+              </div>
             </div>
-            <input
-              type="number"
-              min="0"
-              value={cantidades[i]}
-              onChange={(ev) => handleCantidadChange(i, ev.target.value)}
-              className="border p-2 w-20 text-right"
-            />
+
+            {/* custom spinner: minus button, value, plus button */}
+            <div className="flex items-center space-x-1">
+              <button
+                type="button"
+                onClick={() =>
+                  handleCantidadChange(i, String(Math.max(0, cantidades[i] - 1)))
+                }
+                className="p-1 hover:bg-gray-200 rounded"
+              >
+                <Minus size={16} />
+              </button>
+              <input
+                type="text"
+                readOnly
+                value={cantidades[i]}
+                className="w-10 text-center appearance-none bg-transparent border-transparent focus:ring-0"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  handleCantidadChange(i, String(cantidades[i] + 1))
+                }
+                className="p-1 hover:bg-gray-200 rounded"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
           </div>
         ))}
 
