@@ -1,12 +1,32 @@
-import { useState } from 'react';
+import { useState } from 'react'
 
 const ENTRADAS = [
-  { tipo: 'Entrada general', precio: 80000 },
-  { tipo: 'Entrada general (Socio)', precio: 65000 },
-  { tipo: 'Entrada estudiante', precio: 50000 },
-  { tipo: 'Entrada estudiante (Socio/Olami)', precio: 25000 },
-  { tipo: 'Pagaré después', precio: 0 },
-];
+  {
+    tipo: 'Entrada general',
+    precio: 80000,
+    info: 'Acceso general a todos los servicios de Yamim Noraim. (Rosh Hashana y Yom Kipur)'
+  },
+  {
+    tipo: 'Entrada general (Socio)',
+    precio: 65000,
+    info: 'Descuento para socios: acceso general con precio reducido.'
+  },
+  {
+    tipo: 'Entrada estudiante',
+    precio: 50000,
+    info: 'Descuento estudiante.'
+  },
+  {
+    tipo: 'Entrada estudiante (Socio/Olami)',
+    precio: 25000,
+    info: 'Precio especial para estudiantes socios, o que participen de Olami.'
+  },
+  {
+    tipo: 'Pagaré después',
+    precio: 0,
+    info: 'Reserva tus asientos hoy y paga luego.'
+  }
+]
 
 export default function App() {
   const [cantidades, setCantidades] = useState(ENTRADAS.map(() => 0));
@@ -20,6 +40,36 @@ export default function App() {
   const formulariosIndividualesCompletos = formulariosIndividuales.every(f => f.nombre && f.apellido && f.genero && f.nusaj);
   const hayEntradasPagadas = cantidades.some((c, i) => ENTRADAS[i].precio > 0 && c > 0);
   const hayEntradas = totalEntradas > 0;
+  const [rutError, setRutError] = useState('')
+  const [emailError, setEmailError] = useState('')
+  const [telefonoError, setTelefonoError] = useState('')
+
+  // --- validation helpers ---
+  function validateRUT(rut: string): boolean {
+    const clean = rut.replace(/\./g, '').replace(/-/g, '')
+    if (!/^\d{7,8}[0-9Kk]$/.test(clean)) return false
+    const body = clean.slice(0, -1)
+    const dv = clean.slice(-1).toUpperCase()
+    let sum = 0,
+      mul = 2
+    for (let i = body.length - 1; i >= 0; i--) {
+      sum += parseInt(body[i], 10) * mul
+      mul = mul < 7 ? mul + 1 : 2
+    }
+    const res = 11 - (sum % 11)
+    const computed = res === 11 ? '0' : res === 10 ? 'K' : String(res)
+    return computed === dv
+  }
+  function validateEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
+  function validateTelefono(tel: string): boolean {
+    return /^\d{9}$/.test(tel)
+  }
+  function formatTelefono(tel: string): string {
+    // e.g. “912345678” → “9 1234 5678”
+    return tel.replace(/(\d)(\d{4})(\d{4})/, '+56 $1 $2 $3')
+  }
 
   const handleCantidadChange = (index: number, value: string | number) => {
     const nuevasCantidades = [...cantidades];
@@ -136,34 +186,106 @@ export default function App() {
     }
   }
 
-  return (
+return (
     <div>
       {/* Banner superior */}
       <div className="w-full h-40 bg-white flex justify-center items-center overflow-hidden">
-        <img
-          src="/Banner.jpg"
-          alt="Banner Aish"
-          className="h-full object-contain"
-        />
+        <img src="/Banner.jpg" alt="Banner Aish" className="h-full object-contain" />
       </div>
 
-      {/* Contenedor principal con marco blanco */}
-      <div className="max-w-3xl mx-auto bg-white bg-opacity-95 p-8 my-10 rounded-xl shadow-2xl backdrop-blur-md">
+      {/* Contenedor principal */}
+      <div className="max-w-3xl mx-auto bg-white p-8 my-10 rounded-xl shadow-2xl">
         <h1 className="text-3xl font-bold mb-6 text-center">Compra de Entradas</h1>
 
-        {ENTRADAS.map((entrada, i) => (
-          <div key={i} className="mb-4">
-            <label className="block font-semibold">{entrada.tipo} (${entrada.precio.toLocaleString('es-CL')})</label>
-            <input type="number" min="0" value={cantidades[i]} onChange={(e) => handleCantidadChange(i, e.target.value)} className="border p-2 w-24" />
+        {/* 1–3) Entradas list with tooltip & side-by-side input */}
+        {ENTRADAS.map((e, i) => (
+          <div key={i} className="mb-4 flex items-center justify-between">
+            <div className="flex items-center space-x-1">
+              <span className="font-normal">{e.tipo} (${e.precio.toLocaleString('es-CL')})</span>
+              <span
+                className="text-gray-500 cursor-help"
+                title={e.info}
+                style={{ fontSize: '0.9rem' }}
+              >
+                ℹ️
+              </span>
+            </div>
+            <input
+              type="number"
+              min="0"
+              value={cantidades[i]}
+              onChange={(ev) => handleCantidadChange(i, ev.target.value)}
+              className="border p-2 w-20 text-right"
+            />
           </div>
         ))}
 
         <hr className="my-6" />
 
         <h2 className="text-xl font-bold mb-2">Datos de contacto</h2>
-        <input type="text" placeholder="RUT" className="border p-2 w-full mb-2" onChange={(e) => setFormularioPrincipal({ ...formularioPrincipal, rut: e.target.value })} />
-        <input type="email" placeholder="Email" className="border p-2 w-full mb-2" onChange={(e) => setFormularioPrincipal({ ...formularioPrincipal, email: e.target.value })} />
-        <input type="tel" placeholder="Teléfono" className="border p-2 w-full mb-4" onChange={(e) => setFormularioPrincipal({ ...formularioPrincipal, telefono: e.target.value })} />
+
+        {/* 4) RUT field */}
+        <input
+          type="text"
+          placeholder="RUT (ej: 12345678-5)"
+          className={`border p-2 w-full mb-2 ${rutError ? 'border-red-500' : ''}`}
+          value={formularioPrincipal.rut}
+          onChange={(e) => {
+            setFormularioPrincipal({ ...formularioPrincipal, rut: e.target.value })
+            setRutError('')
+          }}
+          onBlur={(e) => {
+            if (!validateRUT(e.target.value)) {
+              setRutError('RUT inválido')
+            }
+          }}
+        />
+        {rutError && <p className="text-red-600 mb-2">{rutError}</p>}
+
+        {/* 5) Email field */}
+        <input
+          type="email"
+          placeholder="Email"
+          className={`border p-2 w-full mb-2 ${emailError ? 'border-red-500' : ''}`}
+          value={formularioPrincipal.email}
+          onChange={(e) => {
+            setFormularioPrincipal({ ...formularioPrincipal, email: e.target.value })
+            setEmailError('')
+          }}
+          onBlur={(e) => {
+            if (!validateEmail(e.target.value)) {
+              setEmailError('Email inválido')
+            }
+          }}
+        />
+        {emailError && <p className="text-red-600 mb-2">{emailError}</p>}
+
+        {/* 6) Teléfono field */}
+        <input
+          type="tel"
+          placeholder="Teléfono (9 dígitos)"
+          maxLength={9}
+          className={`border p-2 w-full mb-4 ${telefonoError ? 'border-red-500' : ''}`}
+          value={formularioPrincipal.telefono}
+          onChange={(e) => {
+            // allow only digits
+            const digits = e.target.value.replace(/\D/g, '')
+            setFormularioPrincipal({ ...formularioPrincipal, telefono: digits })
+            setTelefonoError('')
+          }}
+          onBlur={(e) => {
+            if (!validateTelefono(e.target.value)) {
+              setTelefonoError('Debe tener 9 dígitos')
+            } else {
+              // optional: format to +56 9 xxxx xxxx
+              setFormularioPrincipal({
+                ...formularioPrincipal,
+                telefono: formatTelefono(e.target.value)
+              })
+            }
+          }}
+        />
+        {telefonoError && <p className="text-red-600 mb-4">{telefonoError}</p>}
 
         {formulariosIndividuales.map((form, i) => (
           <div key={i} className="border p-4 mb-4 rounded-md bg-gray-50">
