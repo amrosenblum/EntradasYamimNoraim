@@ -1,8 +1,9 @@
-// api/webpay-success.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { WebpayPlus } from 'transbank-sdk'
+import transbank from 'transbank-sdk'
 
-// Re‑configure with the **same** credentials
+const { WebpayPlus } = transbank
+
+// Must use the same credentials as in create‑webpay.ts
 WebpayPlus.configureForIntegration(
   process.env.TBK_COMMERCE_CODE!,
   process.env.TBK_API_KEY!
@@ -17,27 +18,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const token = String(req.query.token_ws || '')
 
   try {
-    // 3️⃣ Confirm the transaction
+    // 1️⃣ Confirm the transaction
     const tx = await WebpayPlus.Transaction.getTransactionResult(token)
 
-    // Build payload however your Apps Script expects it:
+    // 2️⃣ Build payload for your Apps Script
     const payload = {
-      amount: tx.amount,
-      status: tx.status,
-      cardDetail: tx.card_detail,
-      entradas: JSON.parse(tx.buy_order || '[]')
+      amount:       tx.amount,
+      status:       tx.status,
+      cardDetail:   tx.card_detail,         // optional
+      entradas:     JSON.parse(tx.buy_order || '[]'),
     }
 
+    // 3️⃣ Write to Google Sheets
     await fetch(process.env.GAS_URL!, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body:    JSON.stringify(payload),
     })
   } catch (err: any) {
     console.error('Webpay confirm error', err)
+    // you could redirect to an error page here if desired
   }
 
-  // 4️⃣ Redirect user to your thanks page
+  // 4️⃣ Redirect the user into your SPA thank‑you route
   res.writeHead(302, { Location: '/gracias' })
   res.end()
 }
