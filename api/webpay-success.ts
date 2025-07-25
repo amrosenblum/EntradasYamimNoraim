@@ -1,19 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import {
   WebpayPlus,
-  Options,
-  IntegrationApiKeys,
-  Environment,
-  IntegrationCommerceCodes
+  Options
 } from 'transbank-sdk'
 
-// instantiate exactly as you did in create‑webpay.ts
+// 1️⃣ Instantiate a WebpayPlus client for integration (sandbox)
+const commerceCode = process.env.TBK_COMMERCE_CODE!
+const apiKey       = process.env.TBK_API_KEY!
+
 const webpayClient = new WebpayPlus.Transaction(
-  new Options(
-    IntegrationCommerceCodes.WEBPAY_PLUS,
-    IntegrationApiKeys.WEBPAY,
-    Environment.Integration
-  )
+  new Options(commerceCode, apiKey, 'INTEGRATION')
 )
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

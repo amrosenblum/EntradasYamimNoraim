@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { WebpayPlus, Options, Environment } from 'transbank-sdk'
+import { WebpayPlus, Options } from 'transbank-sdk'
 
 
 
@@ -8,7 +8,7 @@ const commerceCode = process.env.TBK_COMMERCE_CODE!
 const apiKey       = process.env.TBK_API_KEY!
 
 const webpayClient = new WebpayPlus.Transaction(
-  new Options(commerceCode, apiKey, Environment.Integration)
+  new Options(commerceCode, apiKey, 'INTEGRATION')
 )
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
