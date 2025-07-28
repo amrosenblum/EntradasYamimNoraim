@@ -9,5 +9,12 @@ body {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-attachment: fixed;  /* stays fixed on desktop */
+}
+
+/* disable the “fixed” hack on narrow screens so the image never re‑zooms */
+@media (max-width: 768px) {
+  body {
+    background-attachment: scroll;
+  }
 }
