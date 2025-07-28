@@ -1,20 +1,23 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-body {
-  margin: 0;
-  font-family: sans-serif;
+/* Make html always fill the viewport and carry the background */
+html {
+  height: 100%;
   background-image: url('/Fondo.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed;  /* stays fixed on desktop */
+  background-attachment: fixed;
 }
 
-/* disable the “fixed” hack on narrow screens so the image never re‑zooms */
-@media (max-width: 660px) {
-  body {
+/* Reset body so it scrolls within the html viewport */
+body {
+  min-height: 100%;
+  margin: 0;
+  background: none;
+}
+
+/* (Optional) if you still want no fixed on phones: */
+@media (pointer: coarse) {
+  html {
     background-attachment: scroll;
   }
 }
