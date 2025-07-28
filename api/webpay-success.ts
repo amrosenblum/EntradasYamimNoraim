@@ -4,7 +4,7 @@ import transbank from 'transbank-sdk'
 const { WebpayPlus } = transbank
 
 // Must use the same credentials as in create‑webpay.ts
-const transaction = WebpayPlus.Transaction.buildForIntegration(
+const transaction = WebpayPlus.Transaction.buildForProduction(
   process.env.TBK_COMMERCE_CODE!,
   process.env.TBK_API_KEY!
 )
