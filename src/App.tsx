@@ -364,7 +364,7 @@ return (
             {loading ? 'Redirigiendo a pago...' : 'Pagar con Mercado Pago'}
           </button>
         )}
-
+        {/* 
         {!pagoRealizado && (
           <button
             onClick={handlePagoWebpay}
@@ -378,7 +378,8 @@ return (
             {loading ? 'Redirigiendo a pago...' : 'Pagar con Webpay'}
           </button>
         )}
-
+      */}
+      
         <p className="mt-4 text-sm text-center text-gray-700">
           Si no puedes pagar ahora, contáctanos por WhatsApp al{" "}
           <a
