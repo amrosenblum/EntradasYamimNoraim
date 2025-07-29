@@ -364,7 +364,7 @@ return (
             {loading ? 'Redirigiendo a pago...' : 'Pagar con Mercado Pago'}
           </button>
         )}
-
+        {/*}
         {!pagoRealizado && (
           <button
             onClick={handlePagoWebpay}
