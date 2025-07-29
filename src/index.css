@@ -5,6 +5,8 @@
 body {
   margin: 0;
   font-family: sans-serif;
+
+  /* DESKTOP/WIDESCREEN BEHAVIOR */
   background-image: url('/Fondo.png');
   background-size: cover;
   background-position: center;
@@ -16,5 +18,15 @@ body {
 @media (max-width: 660px) {
   body {
     background-attachment: scroll;
+  }
+}
+
+/* MOBILE OVERRIDE */
+@media (max-width: 768px) {
+  body {
+    background-attachment: scroll !important;
+    background-repeat: repeat !important;
+    background-size: auto !important;
+    background-position: top left !important;
   }
 }
