@@ -1,40 +1,65 @@
 // api/mp-success.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import mercadopago from 'mercadopago'        // ➊
 import fetch from 'node-fetch'
 
+// ➊ Configure the SDK so we can fetch the preference
+mercadopago.configure({
+  access_token: process.env.MERCADOPAGO_ACCESS_TOKEN!
+})
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // MercadoPago will hit this as a GET on success
+  // MercadoPago calls this as a GET
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET')
     return res.status(405).end('Method Not Allowed')
   }
 
-  // Extract the params MercadoPago appended to your success URL
   const {
-    collection_status,
+    collection_status,    // “approved” or “rejected”
     payment_id,
-    preference_id,
-    external_reference,  // if you passed this in create-preferences
-    ...others
+    preference_id
   } = req.query
 
-  // Only log to your sheet if the payment was approved
+  // Only record approved payments
   if (collection_status === 'approved') {
-    const payload = {
-      collection_status,
-      payment_id,
-      preference_id,
-      external_reference,
-      ...others
+    try {
+      // ➋ Fetch the full preference, which contains your metadata
+      const { body: pref } = await mercadopago.preferences.get(
+        String(preference_id)
+      )
+
+      // ➌ Pull out exactly what you sent in create-preferences.ts
+      const {
+        formularioPrincipal,
+        entradas
+      } = pref.metadata as {
+        formularioPrincipal: { rut: string; email: string; telefono: string }
+        entradas: Array<{ tipo: string; nombre: string; apellido: string; genero: string; nusaj: string }>
+      }
+
+      // ➍ Build the payload your Apps Script expects:
+      const payload = {
+        ...formularioPrincipal,   // rut, email, telefono
+        entradas,                 // array of persona objects
+        payment_id,
+        preference_id,
+        collection_status
+      }
+
+      // ➎ Send it to your Google Script
+      await fetch(process.env.GAS_URL!, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+    } catch (err: any) {
+      console.error('MP→Sheets error', err)
+      // optionally redirect to error page here
     }
-    await fetch(process.env.GAS_URL!, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
   }
 
-  // Finally, send the user on to your thank‑you page
+  // Finally, redirect the browser into your SPA thank-you page
   res.writeHead(302, { Location: '/gracias' })
   res.end()
 }

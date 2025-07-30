@@ -14,7 +14,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const { title, quantity, unit_price, metadata } = req.body;
-  // metadata = { formularioPrincipal: { rut, email, telefono }, entradas: [...] }
 
   // **Flatten for cero‐pesos (“pagaré después”)**
   if (unit_price <= 0) {
@@ -33,7 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ redirectTo: '/gracias' });
   }
-  
+
   // 2) Otherwise, do the normal MercadoPago flow
   try {
     const preference = {
