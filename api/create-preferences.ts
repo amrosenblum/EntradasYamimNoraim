@@ -42,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         failure: `${process.env.SITE_URL}/error`
       },
       auto_return: 'approved',
-      metadata
+      external_reference: JSON.stringify(metadata)
     }
 
     const { body } = await mercadopago.preferences.create(preference)
