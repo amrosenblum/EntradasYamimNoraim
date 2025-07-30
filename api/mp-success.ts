@@ -1,32 +1,39 @@
-// api/mp-success.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import mercadopago from 'mercadopago'
 import fetch from 'node-fetch'
 
+mercadopago.configure({
+  access_token: process.env.MERCADOPAGO_ACCESS_TOKEN!
+})
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // MercadoPago will hit this as a GET on success
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET')
     return res.status(405).end('Method Not Allowed')
   }
 
-  // Extract the params MercadoPago appended to your success URL
-  const {
-    collection_status,
-    payment_id,
-    preference_id,
-    external_reference,  // if you passed this in create-preferences
-    ...others
-  } = req.query
+  const { collection_status, payment_id, preference_id } = req.query
 
-  // Only log to your sheet if the payment was approved
   if (collection_status === 'approved') {
+    // 1) get the preference
+    const { body: pref } = await mercadopago.preferences.get(
+      String(preference_id)
+    )
+
+    // 2) parse your JSON payload out of external_reference
+    const external = pref.external_reference as string
+    const { formularioPrincipal, entradas } = JSON.parse(external)
+
+    // 3) build exactly what your Apps Script expects:
     const payload = {
-      collection_status,
+      ...formularioPrincipal,  // brings rut/email/telefono
+      entradas,                // array of persona objects
       payment_id,
-      preference_id,
-      external_reference,
-      ...others
+      collection_status,
+      preference_id
     }
+
+    // 4) write to Google Sheets
     await fetch(process.env.GAS_URL!, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -34,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
   }
 
-  // Finally, send the user on to your thank‑you page
+  // 5) redirect user to your SPA thank-you route
   res.writeHead(302, { Location: '/gracias' })
   res.end()
 }
