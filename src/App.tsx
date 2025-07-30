@@ -25,7 +25,7 @@ const ENTRADAS = [
   },
   {
     tipo: 'Pagaré después',
-    precio: 50,
+    precio: 0,
     info: 'Reserva tus asientos hoy y paga luego.'
   }
 ]
