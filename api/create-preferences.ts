@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     items: [{ title, quantity, currency_id: 'CLP', unit_price }],
     back_urls: {
       success: `${process.env.SITE_URL}/api/mp-success`,
-      failure: `${process.env.SITE_URL}/api/mp-error`
+      failure: `${process.env.SITE_URL}/api/mp-success`
     },
     auto_return: 'approved'
   })
@@ -35,8 +35,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     body: JSON.stringify({
       action:       'insert',
       preferenceId,           // ≤ you’ll use this later
-      comprador: formularioPrincipal, // rut, email, telefono
-      inscripciones: entradas                // array of persona objects
+      ...formularioPrincipal, // rut, email, telefono
+      entradas                // array of persona objects
     })
   })
 
