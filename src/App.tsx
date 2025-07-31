@@ -25,7 +25,7 @@ const ENTRADAS = [
   },
   {
     tipo: 'Pagaré después',
-    precio: 100,
+    precio: 0,
     info: 'Reserva tus asientos hoy y paga luego.'
   }
 ]
@@ -45,6 +45,7 @@ export default function App() {
   const [rutError, setRutError] = useState('')
   const [emailError, setEmailError] = useState('')
   const [telefonoError, setTelefonoError] = useState('')
+  const tiposList: string[] = [];
 
   // --- validation helpers ---
   function validateRUT(rut: string): boolean {
@@ -186,6 +187,12 @@ export default function App() {
       console.error('Webpay error:', err)
       setLoading(false)
     }
+  
+    cantidades.forEach((cantidad, idx) => {
+      for (let j = 0; j < cantidad; j++) {
+        tiposList.push(ENTRADAS[idx].tipo);
+      }
+    });
   }
 
 return (
@@ -314,7 +321,13 @@ return (
 
         {formulariosIndividuales.map((form, i) => (
           <div key={i} className="border p-4 mb-4 rounded-md bg-gray-50">
-            <h3 className="font-semibold mb-2">Entrada #{i + 1}</h3>
+            {/* 2) show the tipo in parentheses */}
+            <h3 className="font-semibold mb-2">
+              Entrada #{i + 1}{' '}
+              <span className="font-normal">
+                ({tiposList[i]})
+              </span>
+            </h3>
             <input type="text" placeholder="Nombre" className="border p-2 w-full mb-2" onChange={(e) => {
               const nuevos = [...formulariosIndividuales];
               nuevos[i] = { ...nuevos[i], nombre: e.target.value };
