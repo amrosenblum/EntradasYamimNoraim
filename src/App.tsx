@@ -186,14 +186,14 @@ export default function App() {
     } catch (err) {
       console.error('Webpay error:', err)
       setLoading(false)
-    }
-  
-    cantidades.forEach((cantidad, idx) => {
+    } 
+  }
+
+  cantidades.forEach((cantidad, idx) => {
       for (let j = 0; j < cantidad; j++) {
         tiposList.push(ENTRADAS[idx].tipo);
       }
     });
-  }
 
 return (
     <div>
