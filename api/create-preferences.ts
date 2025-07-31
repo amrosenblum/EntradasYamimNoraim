@@ -35,8 +35,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     body: JSON.stringify({
       action:       'insert',
       preferenceId,           // ≤ you’ll use this later
-      ...formularioPrincipal, // rut, email, telefono
-      entradas                // array of persona objects
+      comprador: formularioPrincipal, // rut, email, telefono
+      inscripciones: entradas                // array of persona objects
     })
   })
 
