@@ -17,6 +17,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { title, quantity, unit_price, metadata } = req.body
   const { formularioPrincipal, entradas } = metadata
 
+  if (unit_price <=0){
+      await fetch(process.env.GAS_URL!, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action:       'insert',
+      ...formularioPrincipal, // rut, email, telefono
+      entradas                // array of persona objects
+    })
+  })
+
+  return res.status(200).json({ redirectTo: '/gracias' })
+  }
+
+  else{
   // 1️⃣ Create the preference *first* so we get back the ID
   const { body: pref } = await mercadopago.preferences.create({
     items: [{ title, quantity, currency_id: 'CLP', unit_price }],
@@ -24,7 +39,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: `${process.env.SITE_URL}/api/mp-success`,
       failure: `${process.env.SITE_URL}/api/mp-error`
     },
-    auto_return: 'approved'
+    auto_return: 'approved',
+    notification_url: `${process.env.SITE_URL}/api/mp-webhook`
   })
   const preferenceId = pref.id!
 
@@ -40,11 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
   })
 
-  // 3️⃣ Zero-price shortcut?
-  if (unit_price <= 0) {
-    return res.status(200).json({ redirectTo: '/gracias' })
-  }
-
-  // 4️⃣ Otherwise send them to MP
+  // 3  Otherwise send them to MP
   return res.status(200).json({ init_point: pref.init_point })
+  }
 }
